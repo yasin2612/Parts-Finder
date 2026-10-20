@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parts Finder</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1a1d23;--muted:#667085;--line:#e1e4ea;--accent:#2457d6;--accent-t:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101216;--card:#1a1d24;--text:#eef0f4;--muted:#9aa3b2;--line:#2a2f39;--accent:#6c93ff;--accent-t:#0b1020}}
+:root[data-theme="dark"]{--bg:#101216;--card:#1a1d24;--text:#eef0f4;--muted:#9aa3b2;--line:#2a2f39;--accent:#6c93ff;--accent-t:#0b1020}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:1.6rem;margin:0 0 4px}
+p.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+input{width:100%;padding:12px 14px;font-size:1rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text)}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.row{margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+a.site{display:block;text-align:center;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);text-decoration:none;font-weight:600}
+a.site:hover{border-color:var(--accent)}
+a.site.off{opacity:.45;pointer-events:none}
+a.primary{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+.hint{font-size:.8rem;color:var(--muted);margin:8px 0 0}
+h2{font-size:1rem;margin:0 0 10px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Parts Finder</h1>
+  <p class="sub">Enter a model number and jump straight to parts results on the site you pick.</p>
+
+  <div class="card">
+    <div class="row">
+      <label for="model">Model number</label>
+      <input id="model" type="text" placeholder="e.g. WM3400CW" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    </div>
+    <div class="row" style="margin-bottom:0">
+      <label for="kw">Part name (optional)</label>
+      <input id="kw" type="text" placeholder="e.g. door seal, pump, filter" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Search on</h2>
+    <div class="grid" id="sites"></div>
+    <p class="hint">Results open in a new tab. Press Enter to open the first site.</p>
+  </div>
+
+  <div class="card">
+    <h2>Your own site</h2>
+    <label for="tpl">Search URL (use {q} where the search goes)</label>
+    <input id="tpl" type="url" placeholder="https://example.com/search?q={q}" autocomplete="off">
+    <div class="grid" style="margin-top:12px"><a class="site primary off" id="custom" target="_blank" rel="noopener noreferrer" href="#">Search your site</a></div>
+  </div>
+</main>
+<script>
+var SITES=[
+ ["PartSelect","https://www.partselect.com/api/search/?searchterm={q}"],
+ ["RepairClinic","https://www.repairclinic.com/Shop-For-Parts?query={q}"],
+ ["Amazon","https://www.amazon.com/s?k={q}"],
+ ["eBay","https://www.ebay.com/sch/i.html?_nkw={q}"],
+ ["Allegro","https://allegro.pl/listing?string={q}"],
+ ["AliExpress","https://www.aliexpress.com/wholesale?SearchText={q}"],
+ ["Google","https://www.google.com/search?q={q}"],
+ ["Google Images","https://www.google.com/search?tbm=isch&q={q}"]
+];
+var model=document.getElementById("model"),kw=document.getElementById("kw"),tpl=document.getElementById("tpl"),box=document.getElementById("sites"),custom=document.getElementById("custom");
+var links=SITES.map(function(s,i){var a=document.createElement("a");a.className="site"+(i===0?" primary":"");a.target="_blank";a.rel="noopener noreferrer";a.textContent=s[0];a.href="#";box.appendChild(a);return a;});
+function query(){return (model.value.trim()+" "+kw.value.trim()).trim();}
+function update(){
+  var q=query(),enc=encodeURIComponent(q);
+  links.forEach(function(a,i){
+    var u=SITES[i][1];
+    a.href=q?u.replace("{q}",SITES[i][0]==="Google"?encodeURIComponent(q+" replacement part"):enc):"#";
+    a.classList.toggle("off",!q);
+  });
+  var t=tpl.value.trim(),ok=q&&/^https?:\/\/.+/i.test(t);
+  custom.href=ok?(t.indexOf("{q}")>-1?t.split("{q}").join(enc):t+(t.indexOf("?")>-1?"&":"?")+"q="+enc):"#";
+  custom.classList.toggle("off",!ok);
+}
+[model,kw,tpl].forEach(function(el){el.addEventListener("input",update);});
+[model,kw].forEach(function(el){el.addEventListener("keydown",function(e){if(e.key==="Enter"&&links[0].href.slice(-1)!=="#"){window.open(links[0].href,"_blank","noopener");}});});
+update();
+</script>
+</body>
+</html>
